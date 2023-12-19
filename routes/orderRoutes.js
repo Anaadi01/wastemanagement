@@ -2,6 +2,7 @@ const express = require('express');
 const Supply = require('../models/materialSupplySchema.js');
 const Inventory = require('../models/inventorySchema.js');
 const Order = require('../models/materialOrderSchema.js');
+const User = require('../models/userSchema.js');
 const router = express.Router();
 
 // Sample user database (you should use a database in a real application)
@@ -9,12 +10,17 @@ const users = [];
 
 // Register route
 router.post('/createOrder', async (req, res) => {
-    const { orderDate, category, weight, address, pincode } = req.body;
+    const { orderDate, category, weight, address, pincode, userId } = req.body;
 
+    let user = await User.findById(userId)
     try {
         // Check if the mobile number is already registered
 
-        const newOrder = await Order.create({ status: "Order Place", orderDate, category, weight, address, pincode });
+        const newOrder = await Order.create({
+            clientName: `${user.firstName} ${user.lastName}`,
+            status: "Order Place",
+            orderDate, category, weight, address, pincode
+        });
 
         // Create a JWT token with user information
         // const token = generateToken(newUser);
@@ -27,17 +33,27 @@ router.post('/createOrder', async (req, res) => {
     }
 });
 
-router.get('/getOrder', async (req, res) => {
+router.post('/getOrder', async (req, res) => {
 
 
     try {
         // Check if the mobile number is already registered
 
-
+        // console.log(req.body.userId)
         // Hash the password before storing it
         // Create a new user with the hashed password
-        const getOrder = await Order.find();
+        let user = await User.findById(req.body.userId)
+        let getOrder = "";
+        if (user.typeOfEmployee === 'Admin' || user.typeOfEmployee === 'Employee') {
 
+            getOrder = await Order.find();
+        }
+        else {
+            getOrder = await Order.find({
+                clientName: `${user.firstName} ${user.lastName}`
+            });
+
+        }
         // Create a JWT token with user information
         // const token = generateToken(newUser);
         console.log(getOrder)

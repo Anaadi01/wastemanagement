@@ -1,6 +1,7 @@
 const express = require('express');
 const Supply = require('../models/materialSupplySchema.js');
 const Inventory = require('../models/inventorySchema.js');
+const User = require('../models/userSchema.js');
 const router = express.Router();
 
 // Sample user database (you should use a database in a real application)
@@ -8,13 +9,17 @@ const users = [];
 
 // Register route
 router.post('/createSupply', async (req, res) => {
-    const { supplyDate, category, weight, address, area, pincode } = req.body;
+    const { supplyDate, category, weight, address, area, pincode, userId } = req.body;
     console.log(supplyDate, category, weight, address, area, pincode)
-
+    let user = await User.findById(userId)
     try {
         // Check if the mobile number is already registered
 
-        const newCategory = await Supply.create({ status: "Request Send", supplyDate, category, weight, address, area, pincode });
+        const newCategory = await Supply.create({
+            status: "Request Send",
+            clientName: `${user.firstName} ${user.lastName}`,
+            supplyDate, category, weight, address, area, pincode
+        });
 
         // Create a JWT token with user information
         // const token = generateToken(newUser);
@@ -27,16 +32,27 @@ router.post('/createSupply', async (req, res) => {
     }
 });
 
-router.get('/getSupply', async (req, res) => {
+router.post('/getSupply', async (req, res) => {
 
 
     try {
         // Check if the mobile number is already registered
-
-
+        console.log(req.body.userId)
+        let user = await User.findById(req.body.userId)
         // Hash the password before storing it
         // Create a new user with the hashed password
-        const getSupply = await Supply.find();
+
+        let getSupply = ""
+        if (user.typeOfEmployee === 'Admin' || user.typeOfEmployee === 'Employee') {
+
+            getSupply = await Supply.find();
+        }
+        else {
+            getSupply = await Supply.find({
+                clientName: `${user.firstName} ${user.lastName}`
+            });
+
+        }
 
         // Create a JWT token with user information
         // const token = generateToken(newUser);

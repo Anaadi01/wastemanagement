@@ -2,6 +2,7 @@
 const mongoose = require('mongoose');
 
 const supplySchema = new mongoose.Schema({
+  clientName: { type: String, required: true },
   supplyDate: { type: Date, required: true },
   category: { type: String, required: true },
   weight: { type: String, required: true },
